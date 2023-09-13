@@ -13,8 +13,8 @@ def main():
     cfg = Config()
 
     # 現在時刻で出力ファイル名作成
-    dt_now = datetime.datetime.now().strftime('%y%m%d-%H%M%S')
-    file_name = '{}_{}.sql'.format(dt_now, cfg.DB['NAME'])
+    dt_now = datetime.datetime.now()
+    file_name = '{}_{}.sql'.format(dt_now.strftime('%y%m%d-%H%M%S'), cfg.DB['NAME'])
 
     # 実行コマンド末尾にファイル名を足す
     # mysqldump --opt --single-transaction -u ${DB_USER} -p${DB_PASSWORD} ${DB_NAME} > file_name
@@ -32,6 +32,15 @@ def main():
     log.logging(command_result['level'], 'Command Result: {}{}'.format(command_result['result'], detail))
     if command_result['level'] == 'error':
         return
+    else:
+        # バックアップ成功したら、古いファイルは削除
+        remove_result = ssh.remove_old_files(dt_now, cfg.EXEC_DIR, cfg.THRESHOLD_STORAGE_DAYS)
+
+        if remove_result is None:
+            log.logging('info', 'No files are older than {} days'.format(cfg.THRESHOLD_STORAGE_DAYS))
+        else:
+            log.logging(remove_result['level'], 'Remove Result: {}'.format(remove_result['result']))
+            log.logging(remove_result['level'], 'Removed Files: {}'.format(remove_result['detail']))
 
     # バックアップしたファイルのフルパス取得(srtip()で改行削除)
     download_target = ssh.exec_command('cd {}; ls `pwd`/{}'.format(cfg.EXEC_DIR, file_name))
@@ -60,6 +69,8 @@ def main():
         'mimeType': mimetype,
         'parents': [cfg.UPLOAD_FOLDER_ID]
     }
+
+    # Google Driveにアップロード
     token_dir = Path(root_dir).joinpath('token')
     gdrive = GDrive(token_dir)
     upload_result = gdrive.upload(downlaod_file_path, file_metadata)
