@@ -56,7 +56,7 @@ class Ssh:
         finally:
             client.close()
 
-    def remove_old_files(self, dt_now, dir, threshold_storage_days):
+    def remove_old_files(self, dir, threshold_storage_date):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
         client.load_system_host_keys()
@@ -81,9 +81,8 @@ class Ssh:
                 file_path = Path(dir).joinpath(file_name)
                 # ファイルのメタデータを取得
                 file_stat = sftp_connection.stat(str(file_path))
-                # ファイル更新日から何日経ったか計算
-                elapsed_days = (dt_now.date() - date.fromtimestamp(file_stat.st_mtime)).days
-                if elapsed_days > threshold_storage_days:
+                # 保存期間を過ぎたら削除
+                if date.fromtimestamp(file_stat.st_mtime) < threshold_storage_date:
                     removed_files.append(str(file_path))
                     client.exec_command('rm {}'.format(file_path))
 

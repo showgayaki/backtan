@@ -15,6 +15,8 @@ def main():
     # 現在時刻で出力ファイル名作成
     dt_now = datetime.datetime.now()
     file_name = '{}_{}.sql'.format(dt_now.strftime('%y%m%d-%H%M%S'), cfg.DB['NAME'])
+    # 保存期限の日付を計算
+    threshold_storage_date = (dt_now - datetime.timedelta(days=cfg.THRESHOLD_STORAGE_DAYS)).date()
 
     # 実行コマンド末尾にファイル名を足す
     # mysqldump --opt --single-transaction -u ${DB_USER} -p${DB_PASSWORD} ${DB_NAME} > file_name
@@ -25,7 +27,7 @@ def main():
     log.logging('info', 'SSH to {}({})'.format(cfg.SSH['HOSTNAME'], ssh.config['hostname']))
 
     # ログにはパスワード部分を置換したコマンドを記載
-    log.logging('info', 'Exec Command: {}'.format(re.sub('-p.* ', '-p[password] ', cfg.COMMAND)))
+    log.logging('info', 'Exec Command: {}'.format(re.sub('-p\\S+\\s', '-p[password] ', cfg.COMMAND)))
     # サーバー上でDBバックアップ
     command_result = ssh.exec_command('cd {}; {}'.format(cfg.EXEC_DIR, cfg.COMMAND))
     detail = '({})'.format(command_result['detail']) if command_result['detail'] else ''
@@ -34,10 +36,10 @@ def main():
         return
     else:
         # バックアップ成功したら、古いファイルは削除
-        remove_result = ssh.remove_old_files(dt_now, cfg.EXEC_DIR, cfg.THRESHOLD_STORAGE_DAYS)
+        remove_result = ssh.remove_old_files(cfg.EXEC_DIR, threshold_storage_date)
 
         if remove_result is None:
-            log.logging('info', 'No files are older than {} days'.format(cfg.THRESHOLD_STORAGE_DAYS))
+            log.logging('info', 'SSH server: No files on are older than {} days'.format(cfg.THRESHOLD_STORAGE_DAYS))
         else:
             log.logging(remove_result['level'], 'Remove Result: {}'.format(remove_result['result']))
             log.logging(remove_result['level'], 'Removed Files: {}'.format(remove_result['detail']))
@@ -72,9 +74,26 @@ def main():
 
     # Google Driveにアップロード
     token_dir = Path(root_dir).joinpath('token')
-    gdrive = GDrive(token_dir)
+    gdrive = GDrive(token_dir, cfg.TIME_ZONE)
+
     upload_result = gdrive.upload(downlaod_file_path, file_metadata)
     log.logging(upload_result['level'], 'Upload Result: {}({})'.format(upload_result['result'], upload_result['detail']))
+
+    if upload_result['level'] == 'error':
+        return
+    else:
+        # アップロード成功したら、古いファイルは削除
+        params = {
+            'folder_id': cfg.UPLOAD_FOLDER_ID,
+            'mimetype': mimetype
+        }
+        delete_result = gdrive.delete_old_files(params, threshold_storage_date)
+
+        if delete_result is None:
+            log.logging('info', 'Google Drive: No files on are older than {} days'.format(cfg.THRESHOLD_STORAGE_DAYS))
+        else:
+            log.logging(delete_result['level'], 'Delete Result: {}'.format(delete_result['result']))
+            log.logging(delete_result['level'], 'Deleted Files: {}'.format(delete_result['detail']))
 
 
 if __name__ == '__main__':

@@ -20,3 +20,4 @@ class Config:
         self.EXEC_DIR = os.environ.get('EXEC_DIR')
         self.THRESHOLD_STORAGE_DAYS = int(os.environ.get('THRESHOLD_STORAGE_DAYS'))
         self.UPLOAD_FOLDER_ID = os.environ.get('UPLOAD_FOLDER_ID')
+        self.TIME_ZONE = os.environ.get('TIME_ZONE')
