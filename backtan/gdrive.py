@@ -62,9 +62,9 @@ class GDrive:
     def delete_old_files(self, param_dict, threshold_storage_date):
         """Search file in drive location
 
-        Load pre-authorized user credentials from the environment.
-        TODO(developer) - See https://developers.google.com/identity
-        for guides on implementing OAuth2 for the application.
+        https://developers.google.com/drive/api/guides/search-files
+        https://developers.google.com/drive/api/reference/rest/v3/files
+        https://developers.google.com/drive/api/reference/rest/v3/files/list
         """
         params = '("{}" in parents) and (mimeType = "{}")'.format(
             param_dict['folder_id'],

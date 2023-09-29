@@ -39,7 +39,7 @@ def main():
         remove_result = ssh.remove_old_files(cfg.EXEC_DIR, threshold_storage_date)
 
         if remove_result is None:
-            log.logging('info', 'SSH server: No files on are older than {} days'.format(cfg.THRESHOLD_STORAGE_DAYS))
+            log.logging('info', 'SSH server: No files are older than {} days'.format(cfg.THRESHOLD_STORAGE_DAYS))
         else:
             log.logging(remove_result['level'], 'Remove Result: {}'.format(remove_result['result']))
             log.logging(remove_result['level'], 'Removed Files: {}'.format(remove_result['detail']))
@@ -74,6 +74,7 @@ def main():
 
     # Google Driveにアップロード
     token_dir = Path(root_dir).joinpath('token')
+    log.logging('info', 'Start Upload to Google Drive.')
     gdrive = GDrive(token_dir, cfg.TIME_ZONE)
 
     upload_result = gdrive.upload(downlaod_file_path, file_metadata)
@@ -90,7 +91,7 @@ def main():
         delete_result = gdrive.delete_old_files(params, threshold_storage_date)
 
         if delete_result is None:
-            log.logging('info', 'Google Drive: No files on are older than {} days'.format(cfg.THRESHOLD_STORAGE_DAYS))
+            log.logging('info', 'Google Drive: No files are older than {} days'.format(cfg.THRESHOLD_STORAGE_DAYS))
         else:
             log.logging(delete_result['level'], 'Delete Result: {}'.format(delete_result['result']))
             log.logging(delete_result['level'], 'Deleted Files: {}'.format(delete_result['detail']))
