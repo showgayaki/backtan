@@ -59,16 +59,17 @@ class GDrive:
         except HttpError as error:
             return {'level': 'error', 'result': 'Failed', 'detail': str(error)}
 
-    def delete_old_files(self, param_dict, threshold_storage_date):
+    def delete_old_files(self, param_dict, threshold_storage_date, trashed=False):
         """Search file in drive location
 
         https://developers.google.com/drive/api/guides/search-files
         https://developers.google.com/drive/api/reference/rest/v3/files
         https://developers.google.com/drive/api/reference/rest/v3/files/list
         """
-        params = '("{}" in parents) and (mimeType = "{}")'.format(
+        params = '("{}" in parents) and (mimeType = "{}") and (trashed = {})'.format(
             param_dict['folder_id'],
-            param_dict['mimetype']
+            param_dict['mimetype'],
+            'true' if trashed else 'false',
         )
         try:
             # create drive api client
@@ -80,14 +81,14 @@ class GDrive:
                 response = service.files().list(q=params,
                                                 spaces='drive',
                                                 fields='nextPageToken, '
-                                                'files(id, name, createdTime, trashed)',
+                                                'files(id, name, createdTime)',
                                                 pageToken=page_token).execute()
                 for file in response.get('files', []):
                     # createdTimeはUTCなので、タイムゾーンを変換する
                     created_utc = datetime.fromisoformat(file.get('createdTime'))
                     converted_timezone = created_utc.astimezone(self.time_zone)
                     # ゴミ箱に移動されていなくて保管期限日付を過ぎていたら、ファイル削除
-                    if converted_timezone.date() < threshold_storage_date and not file.get('trashed'):
+                    if converted_timezone.date() < threshold_storage_date:
                         service.files().delete(
                             fileId=file.get('id')
                         ).execute()
