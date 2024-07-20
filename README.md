@@ -41,3 +41,7 @@ OnCalendar=*-*-* 06:00:00
 [Install]
 WantedBy=timers.target
 ```
+
+`sudo systemctl daemon-reload`  
+`sudo systemctl enable backtan.timer`  
+`sudo systemctl start backtan.timer`  
