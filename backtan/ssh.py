@@ -4,7 +4,7 @@ from datetime import date
 
 
 class Ssh:
-    def __init__(self, hostname, config_file_path):
+    def __init__(self, hostname, config_file_path=str(Path.home().joinpath('.ssh', 'config'))):
         ssh_config = paramiko.SSHConfig()
         with open(config_file_path, 'r') as f:
             ssh_config.parse(f)
@@ -13,7 +13,7 @@ class Ssh:
         if 'port' not in self.config:
             self.config['port'] = 22
 
-    def exec_command(self, command):
+    def exec_command(self, exec_dir, command):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
         client.load_system_host_keys()
@@ -25,17 +25,23 @@ class Ssh:
                 port=self.config['port']
             )
 
-            stdin, stdout, stderr = client.exec_command(command)
+            # 実行ディレクトリがなかったら作成
+            _, _, stderr = client.exec_command(f'ls {exec_dir}')
+            if stderr:
+                client.exec_command(f'mkdir {exec_dir}')
+
+            # 実行ディレクトリに移動してコマンド実行
             cmd_result = ''
+            _, stdout, _ = client.exec_command(f'cd {exec_dir}; {command}')
             for line in stdout:
                 cmd_result += line
 
-            return {'level': 'info', 'result': 'Succeeded', 'detail': cmd_result}
+            return {'level': 'info', 'result': 'Succeeded', 'detail': cmd_result.strip()}
         except Exception as e:
+            print(f'Error Occured: {e}')
             return {'level': 'error', 'result': 'Failed', 'detail': str(e)}
         finally:
             client.close()
-            del client, stdin, stdout, stderr
 
     def sftp_download(self, server, local):
         client = paramiko.SSHClient()
@@ -94,4 +100,3 @@ class Ssh:
             return {'level': 'error', 'result': 'Failed', 'detail': str(e)}
         finally:
             client.close()
-            del client, stdin, stdout, stderr

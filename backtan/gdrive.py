@@ -87,7 +87,7 @@ class GDrive:
                     # createdTimeはUTCなので、タイムゾーンを変換する
                     created_utc = datetime.fromisoformat(file.get('createdTime'))
                     converted_timezone = created_utc.astimezone(self.time_zone)
-                    # ゴミ箱に移動されていなくて保管期限日付を過ぎていたら、ファイル削除
+                    # 保管期限日付を過ぎていたら、ファイル削除
                     if converted_timezone.date() < threshold_storage_date:
                         service.files().delete(
                             fileId=file.get('id')

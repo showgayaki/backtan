@@ -1,16 +1,38 @@
 # backtan
+- DBサーバーにSSH
+- DBバックアップ
+- sqlファイルをダウンロード
+- sqlファイルをGoogle Driveにアップロード
+
+する、とっても便利なやつ。
 
 
-## .env
+## config.json
+プロジェクトルートに置いておく。  
+対象のデータベースを増やしたければ、DATABASESに追加していけばよろし。
 ```
-SSH_HOSTNAME=
-DB_NAME=
-DB_USER=
-DB_PASSWORD=
-COMMAND="mysqldump --opt --single-transaction -u ${DB_USER} -p${DB_PASSWORD} ${DB_NAME} > "
-EXEC_DIR=
-THRESHOLD_STORAGE_DAYS=
-UPLOAD_FOLDER_ID=
+{
+    "SSH_HOST": "",
+    "DATABASES": [
+        {
+            "NAME": "",
+            "USER": "",
+            "PASSWORD": "",
+            "UPLOAD_FOLDER_ID": "",  # Google DriveのフォルダーID
+            "THRESHOLD_STORAGE_DAYS": 60
+        },
+        {
+            "NAME": "",
+            "USER": "",
+            "PASSWORD": "",
+            "UPLOAD_FOLDER_ID": "",  # Google DriveのフォルダーID
+            "THRESHOLD_STORAGE_DAYS": 60
+        }
+    ],
+    "EXEC_COMMAND": "mysqldump --opt --single-transaction -u ${DB_USER} -p${DB_PASSWORD} ${DB_NAME} > ",
+    "EXEC_DIR": "~/db",
+    "TIME_ZONE": "Asia/Tokyo"
+}
 ```
 
 ## systemd

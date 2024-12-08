@@ -1,23 +1,24 @@
-import os
-from pathlib import Path
-from dotenv import load_dotenv
+import json
+from types import SimpleNamespace
+
+
+def _load_config():
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+
+    return SimpleNamespace(**config)
 
 
 class Config:
-    def __init__(self, config_file_path=str(Path.home().joinpath('.ssh', 'config'))):
-        load_dotenv()
+    _instance = None
+    _config = None
 
-        self.SSH = {
-            'HOSTNAME': os.environ.get('SSH_HOSTNAME'),
-            'CONFIG': config_file_path,
-        }
-        self.DB = {
-            'NAME': os.environ.get('DB_NAME'),
-            'USER': os.environ.get('DB_USER'),
-            'PASS': os.environ.get('DB_PASSWORD'),
-        }
-        self.COMMAND = os.environ.get('COMMAND')
-        self.EXEC_DIR = os.environ.get('EXEC_DIR')
-        self.THRESHOLD_STORAGE_DAYS = int(os.environ.get('THRESHOLD_STORAGE_DAYS'))
-        self.UPLOAD_FOLDER_ID = os.environ.get('UPLOAD_FOLDER_ID')
-        self.TIME_ZONE = os.environ.get('TIME_ZONE')
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._config = _load_config()
+        return cls._instance
+
+    @property
+    def config(self):
+        return self._config
