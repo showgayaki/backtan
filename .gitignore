@@ -3,7 +3,7 @@ download/
 memo.md
 config.json
 .DS_Store
-
+*.log*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
