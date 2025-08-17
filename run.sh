@@ -7,7 +7,7 @@ source .venv/bin/activate
 # https://zenn.dev/wtkn25/articles/python-googledriveapi-auth#quickstart.pyを実行する
 # https://tech-blog.fancs.com/entry/2017/12/04/Gmail_API取得できたけど、Oauth認証でひっかかった話#--noauth_local_webserver-オプション
 if [ -e "./token/token.json" ]; then
-    python backtan/core.py
+    python backtan/core.py "$@"
 else
-    python backtan/core.py  --noauth_local_webserver
+    python backtan/core.py  --noauth_local_webserver "$@"
 fi

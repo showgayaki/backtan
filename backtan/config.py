@@ -1,12 +1,34 @@
 import json
-from types import SimpleNamespace
+from dataclasses import dataclass
 
 
-def _load_config():
+@dataclass
+class DatabaseConfig:
+    NAME: str
+    USER: str
+    PASSWORD: str
+    THRESHOLD_STORAGE_DAYS: int
+    UPLOAD_FOLDER_ID: str
+
+
+@dataclass
+class AppConfig:
+    DATABASES: list[DatabaseConfig]
+    SSH_HOST: str
+    EXEC_COMMAND: str
+    EXEC_DIR: str
+    TIME_ZONE: str
+
+
+def _load_config() -> AppConfig:
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    return SimpleNamespace(**config)
+    # DATABASES を DatabaseConfig インスタンスのリストに変換
+    databases = [DatabaseConfig(**db) for db in config['DATABASES']]
+    config['DATABASES'] = databases
+
+    return AppConfig(**config)
 
 
 class Config:

@@ -35,6 +35,10 @@
 }
 ```
 
+## Opitons
+`--db`: DATABASES[n]["NAME"]のDB名で指定(スペース区切りで複数指定可)  
+ex: `[path to]/backtan/run.sh --db camenashi kakeibosan`  
+
 ## systemd
 `chmod 755 run.sh`  
 ### service
@@ -46,7 +50,7 @@ Description=backtan
 [Service]
 Type=simple
 User=[user name]
-ExecStart=[path to]/backtan/run.sh
+ExecStart=[path to]/backtan/run.sh --db kakeibosan
 
 [Install]
 WantedBy=multi-user.target

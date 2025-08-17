@@ -1,20 +1,38 @@
+import argparse
 import datetime
 import re
 import mimetypes
-from types import SimpleNamespace
 from pathlib import Path
+
 from config import Config
 from ssh import Ssh
 from gdrive import GDrive
 from logger import Logger
 
 
-def main():
+class Args(argparse.Namespace):
+    db: list[str] | None
+
+
+def parse_args() -> Args:
+    parser = argparse.ArgumentParser(description='Backtan Database Backup Tool')
+    parser.add_argument(
+        '--db',
+        nargs='+',  # 複数指定できる
+        help='Database name(s) to backup. If omitted, all databases in config.json are backed up.',
+    )
+    return parser.parse_args(namespace=Args())
+
+
+def main(selected_dbs: list[str] | None = None) -> None:
     # 設定読み込み
     cfg = Config().config
+    log.logging('info', f'Selected DB(s): {selected_dbs}')
 
     for db in cfg.DATABASES:
-        db = SimpleNamespace(**db)
+        if selected_dbs and db.NAME not in selected_dbs:
+            continue
+
         log.logging('info', f'--- Starting backup DB: {db.NAME} ---')
 
         # 現在時刻で出力ファイル名作成
@@ -108,6 +126,7 @@ if __name__ == '__main__':
     log = Logger(root_dir)
     log.logging('info', '===== backtan start =====')
 
-    main()
+    args = parse_args()
+    main(args.db)
 
     log.logging('info', '===== backtan end =====')
